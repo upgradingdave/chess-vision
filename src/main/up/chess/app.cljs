@@ -105,7 +105,9 @@
          (for [n (if (= (:side prefs) :white)
                    (reverse (range 1 9))
                    (range 1 9))
-               l (range 1 9)]
+               l (if (= (:side prefs) :black)
+                   (reverse (range 1 9))
+                   (range 1 9))]
            (let [number (keyword (str n))
                  l1 (char (to-letter l))
                  letter (keyword l1)
