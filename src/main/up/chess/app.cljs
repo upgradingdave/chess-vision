@@ -2,6 +2,7 @@
   (:require
    [reagent.core :as r]
    [reagent.dom :as rdom]
+   ["react-transition-group" :refer [TransitionGroup CSSTransition Transition]]
    [re-frame.core :as rf]
    [up.chess.css :as css]))
 
@@ -56,8 +57,17 @@
  :guess
  (fn [{:keys [db]} [_ guess-coord]]
    (if (= guess-coord (:coord db))
-     {:db (assoc-in db [:coord] (next-coord))}
-     {:db db})))
+     {:db (-> db
+              (assoc-in [:coord] (next-coord))
+              (assoc-in [:good-guess] guess-coord))}
+     {:db (assoc-in db [:bad-guess] guess-coord)})))
+
+(rf/reg-event-fx
+ :clear-guess
+ (fn [{:keys [db]} _]
+   {:db (-> db
+            (assoc-in [:good-guess] nil)
+            (assoc-in [:bad-guess] nil))}))
 
 (rf/reg-event-fx
  :set-side-preference
@@ -89,37 +99,77 @@
  (fn [db _]
    (get-in db [:preferences])))
 
+(rf/reg-sub
+ :bad-guess
+ (fn [db _]
+   (get-in db [:bad-guess])))
+
+(rf/reg-sub
+ :good-guess
+ (fn [db _]
+   (get-in db [:good-guess])))
+
 ;; User Interface -------------------------------------------------------------
 
-(defn square-click [evt]
-  (let [id (.-id (.-target evt))]
-    (rf/dispatch-sync [:guess id])))
+(defn calc-id [l n]
+  (str (to-letter l) n))
+
+(defn square-view [prefs board l n]
+  (let [bad-guess-st (rf/subscribe [:bad-guess])
+        good-guess-st (rf/subscribe [:good-guess])]
+    (fn [prefs board l n]
+      (let [color (if (is-dark-square? l n) "square--dark" "square--light")
+            number-kw (keyword (str n))
+            letter (char (to-letter l))
+            letter-kw (keyword letter)
+            square (get (get board number-kw) letter-kw)
+            id (calc-id l n)
+            bad-guess @bad-guess-st
+            good-guess @good-guess-st]
+
+        [:div {:id id
+               :class "square"
+               :on-click (fn [_] (rf/dispatch-sync [:guess id]))}
+           
+         [:div {:class (str "square--normal " color)}
+          (when (:show-coords? prefs)
+            (:coord square))]
+
+         [:> CSSTransition
+          {:classNames "square--good"
+           :timeout 2000
+           :in (= good-guess id)
+           :enter true
+           :on-entered #(rf/dispatch [:clear-guess])}
+          [:div {:class (str "square--hidden " color)}
+           [:i {:class "fas fa-check fa-2x"}]]]
+
+         [:> CSSTransition
+          {:classNames "square--bad"
+           :timeout 2000
+           :in (= bad-guess id)
+           :enter true
+           :on-entered #(rf/dispatch [:clear-guess])}
+          [:div {:class (str "square--hidden " color)}
+           [:i {:class "fas fa-times fa-2x"}]]]
+
+           ]))))
 
 (defn board-view []
   (let [prefs-st (rf/subscribe [:preferences])
         board-st (rf/subscribe [:board])]
     (fn []
-      (let [board @board-st
-            prefs @prefs-st]
-        [:div {:class "chess-board rounded-corner"}
+      (let [prefs @prefs-st
+            board @board-st]
+        [:div {:class "chess-board"}
+
          (for [n (if (= (:side prefs) :white)
                    (reverse (range 1 9))
                    (range 1 9))
                l (if (= (:side prefs) :black)
                    (reverse (range 1 9))
                    (range 1 9))]
-           (let [number (keyword (str n))
-                 l1 (char (to-letter l))
-                 letter (keyword l1)
-                 square (get (get board number) letter)
-                 color (if (is-dark-square? l n) "dark-square" "light-square")
-                 id (str l1 n)]
-             
-             ^{:key id}[:div {:class (str "chess-square " color)
-                              :on-click square-click
-                              :id id}
-                        (when (:show-coords? prefs)
-                          (:coord square))]))]))))
+           ^{:key (str l n)} [square-view prefs board l n])]))))
 
 (defn prefs-side-click [evt]
   (rf/dispatch [:set-side-preference (.-id (.-target evt))]))
@@ -147,17 +197,19 @@
                    :id :show-coords :name :show-coords
                    :checked (:show-coords? prefs)
                    :on-change prefs-show-coords-click}]
-          [:label {:for :show-coords} "Show Coordinates?"]]
-          ]))))
+          [:label {:for :show-coords} "Show Coordinates?"]]]))))
 
 (defn main-view []
   (let [next-coord-st (rf/subscribe [:coord])]
     (fn []
       (let []
         [:div {:class "chess-vision"}
+         
          [:div "Click on the square: " @next-coord-st]
          [preferences-view]
-         [board-view]]))))
+         [board-view]
+         
+         ]))))
 
 (defn render! []
   (rdom/render [main-view]

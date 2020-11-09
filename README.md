@@ -5,7 +5,7 @@ coordinates.
 
 When you click the correct square, a new coordinate is shown.
 
-It ain't pretty but it works. 
+UI still needs work, but it's usable at least!
 
 ## Development
 

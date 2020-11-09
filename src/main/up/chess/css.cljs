@@ -27,8 +27,7 @@
 
    (let [s (/ width 8)]
      [:.chess-board
-      {:background-color dark-square-color
-       :margin :auto
+      {:margin :auto
        :width (str width "px")     
        :display "grid"
        :grid-template-columns (apply str
@@ -42,20 +41,43 @@
      :-moz-border-radius "5px"
      :-webkit-border-radius "5px"}]
 
-   [:.chess-square {:cursor :pointer
-                    :margin :auto
-                    :text-align :center
-                    :line-height (str (/ width 8) "px")
-                    :width "100%"
-                    :height "100%"
-                    }]
-   
-   [:.light-square {:background-color light-square-color
-                    :color light-square-text}]
+   ;; SQUARES 
 
-   [:.dark-square {:background-color dark-square-color
-                   :color dark-square-text}]
-   
+   [:.square {:cursor :pointer
+              :margin :auto
+              :text-align :center
+              :line-height (str (/ width 8) "px")
+              :position :relative
+              :width "100%"
+              :height "100%"
+              }]
+
+   [:.square--normal {:position :absolute
+                      :width "100%"
+                      :height "100%"}]
+
+   [:.square--light {:background-color light-square-color
+                     :color light-square-text}]
+
+   [:.square--dark {:position :absolute
+                    :background-color dark-square-color
+                    :color dark-square-text}]
+
+   [:.square--hidden {:position :absolute
+                      :width "100%"
+                      :height "100%"
+                      :opacity 0
+                      }]
+
+   [:.square--good-enter {:opacity 1
+                          :background-color :green}]
+   [:.square--good-enter-active {:opacity 0
+                                 :transition "all 2000ms ease-out"}]
+
+   [:.square--bad-enter {:opacity 1
+                         :background-color :red}]
+   [:.square--bad-enter-active {:opacity 0
+                                :transition "all 2000ms ease-out"}]
    ])
 
 (defn insert-styles [style-list]
