@@ -5,8 +5,6 @@ coordinates.
 
 When you click the correct square, a new coordinate is shown.
 
-UI still needs work, but it's usable at least!
-
 ## Development
 
 The following will build the code, watch for changes (and

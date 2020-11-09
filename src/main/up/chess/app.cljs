@@ -2,14 +2,14 @@
   (:require
    [reagent.core :as r]
    [reagent.dom :as rdom]
-   ["react-transition-group" :refer [TransitionGroup CSSTransition Transition]]
+   ["react-transition-group" :refer [CSSTransition]]
    [re-frame.core :as rf]
    [up.chess.css :as css]))
 
 ;; App Logic ------------------------------------------------------------------
 
 (defn to-letter [number]
-  (char (+ 96 number)))
+  (char (+ 64 number)))
 
 (defn next-coord []
   (let [l (+ (rand-int 8) 1)
@@ -133,7 +133,7 @@
            
          [:div {:class (str "square--normal " color)}
           (when (:show-coords? prefs)
-            (:coord square))]
+            [:h1 (:coord square)])]
 
          [:> CSSTransition
           {:classNames "square--good"
@@ -151,7 +151,9 @@
            :enter true
            :on-entered #(rf/dispatch [:clear-guess])}
           [:div {:class (str "square--hidden " color)}
-           [:i {:class "fas fa-times fa-2x"}]]]
+           [:h1 (:coord square)]
+           ;;[:i {:class "fas fa-times fa-2x"}]
+           ]]
 
            ]))))
 
@@ -183,7 +185,7 @@
     (fn []
       (let [prefs @prefs-st]
         [:div {:class "preferences"}
-         [:div {:class "side-preference"}
+         [:div {:class "sidebar__item side-preference"}
           [:input {:type :radio :on-change prefs-side-click
                    :id :white :name :white :value :white
                    :checked (= (:side prefs) :white)}]
@@ -192,7 +194,7 @@
                    :id :black :name :black :value :black
                    :checked (= (:side prefs) :black)}]
           [:label {:for :black} "Black"]]
-         [:div {:class "show-coords-preference"}
+         [:div {:class "sidebar__item show-coords-preference"}
           [:input {:type :checkbox
                    :id :show-coords :name :show-coords
                    :checked (:show-coords? prefs)
@@ -203,11 +205,13 @@
   (let [next-coord-st (rf/subscribe [:coord])]
     (fn []
       (let []
-        [:div {:class "chess-vision"}
-         
-         [:div "Click on the square: " @next-coord-st]
-         [preferences-view]
-         [board-view]
+        [:div {:class "chess-vision page"}
+         [:div {:class "page__sidebar"}
+          [preferences-view]
+          [:div {:class "sidebar__item"}
+           [:h2 "Find Square: " @next-coord-st]]]
+         [:div {:class "page__content"}
+          [board-view]]
          
          ]))))
 
