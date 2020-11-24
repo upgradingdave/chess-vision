@@ -16,6 +16,12 @@ running this command, open a browser and go to http://localhost:8080
 If you want a repl:
 
 	npx shadow-cljs browser-repl
+	
+	
+Release a new production version (advanced compile and then copy to
+firebase project):
+
+	./scripts/release.sh
 
 
 
