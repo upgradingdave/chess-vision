@@ -5,6 +5,8 @@ coordinates.
 
 When you click the correct square, a new coordinate is shown.
 
+Try it out here: https://app.upgradingdave.com/chess-vision/
+
 ## Development
 
 The following will build the code, watch for changes (and
